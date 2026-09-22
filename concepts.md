@@ -12,3 +12,9 @@ That's why we handle the exceptions, while calling to get the response  from an 
 - Use httpx.HTTPError (status code - 502), if the external API didn't respond properly.
 - Use httpx.TimeoutException (status code- 504), if the API took longer to respond, than  the amount of timeout you have set. Seeing 502/504 they should retry later because the problem is upstream.
 - Status code 500, if it's your own code's fault. A client seeing 500 should report a bug to you.
+
+
+## What my TTL cache can and can't do
+
+I built an in-process TTL cache keyed by URL. But, I understand the drawbacks of this method. The cache only lives as long as the process is running, as soon as the process stops the cache loses memory and that is a big drawback because it can create a situation of cache stampede upon restarting the process.
+Also cache can't be shared by different processes, that is the problem that Redis solves. Errors are never cached in my project — deliberately: failures are usually temporary, and a cached error would keep serving "broken" after the upstream recovered. The narrow exception in the wild is "negative caching" — remembering a failure for just a few seconds so a crowd of clients doesn't keep hammering a service that's already down
